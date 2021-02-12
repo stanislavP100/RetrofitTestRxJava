@@ -21,15 +21,22 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.internal.operators.observable.ObservableScalarXMap;
+import io.reactivex.rxjava3.internal.schedulers.RxThreadFactory;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import retrofit2.Call;
+import retrofit2.CallAdapter;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
+
 
     private Adapter mAdapter;
 
@@ -43,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<Product> products=new ArrayList<>();
 
     static Bitmap noImageBitmap ;
+    private Object RxThreadFactory;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,34 +61,53 @@ public class MainActivity extends AppCompatActivity {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://budmagas.herokuapp.com/")
+                .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         ProductApiRetrofit productApiRetrofit=retrofit.create(ProductApiRetrofit.class);
 
 
-        Call<List<Product>> messages = productApiRetrofit.getProducts();
+        Observable <List<Product>> productObservable=productApiRetrofit.getProductsObservable();
 
-        messages.enqueue(new Callback<List<Product>>() {
-            @Override
-            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
+
+        productObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .  subscribe( (List<Product> s) -> {System.out.println(s.get(0).getName());
 
                 LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
                 mNumbersList.setLayoutManager(layoutManager);
-                mAdapter = new Adapter(response);
+                mAdapter = new Adapter(s);
                 mNumbersList.setAdapter(mAdapter);
-                mAdapter = new Adapter( response);
 
-                productsImageString=JsonUtils.getImageStringFromJson(response);
+                },
+                        (Throwable::printStackTrace));
 
-                System.out.println("response " + response.body().size());
-            }
 
-            @Override
-            public void onFailure(Call<List<Product>> call, Throwable t) {
 
-            }
-        });
+//        Call<List<Product>> messages = productApiRetrofit.getProducts();
+//
+//        messages.enqueue(new Callback<List<Product>>() {
+//            @Override
+//            public void onResponse(Call<List<Product>> call, Response<List<Product>> response) {
+//
+//                LinearLayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+//                mNumbersList.setLayoutManager(layoutManager);
+//                mAdapter = new Adapter(response);
+//                mNumbersList.setAdapter(mAdapter);
+//                mAdapter = new Adapter( response);
+//
+//                System.out.println("response " + response.getClass());
+//            }
+//
+//            @Override
+//            public void onFailure(Call<List<Product>> call, Throwable t) {
+//
+//            }
+//        });
+//
+
 
 
 //        Observable<String> obString=  Observable.fromCallable(() -> {
@@ -159,29 +186,29 @@ public class MainActivity extends AppCompatActivity {
 //
    }
 
-
-    public String getResponse()
-    {
-        try {
-            weatherRequestUrl = new URL("https://budmagas.herokuapp.com/retrofittest");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
-
-        String jsonWeatherResponse = "";
-
-        try {
-            jsonWeatherResponse = getResponseFromHttpUrl(weatherRequestUrl); // json строка з сервера
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return jsonWeatherResponse;
-    }
-
+//
+//    public String getResponse()
+//    {
+//        try {
+//            weatherRequestUrl = new URL("https://budmagas.herokuapp.com/retrofittest");
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//        }
+//
+//
+//        String jsonWeatherResponse = "";
+//
+//        try {
+//            jsonWeatherResponse = getResponseFromHttpUrl(weatherRequestUrl); // json строка з сервера
+//
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return jsonWeatherResponse;
+//    }
+//
 
 
     public static Bitmap getBitmap(String url) throws IOException {
@@ -198,23 +225,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public  String getResponseFromHttpUrl(URL url) throws IOException {
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        try {
-            InputStream in = urlConnection.getInputStream();
-
-            Scanner scanner = new Scanner(in);
-            scanner.useDelimiter("\\A");
-
-            boolean hasInput = scanner.hasNext();
-            if (hasInput) {
-            //    System.out.println(scanner.next());
-                return scanner.next();
-            } else {
-                return null;
-            }
-        } finally {
-            urlConnection.disconnect();
-        }
-    }
+//    public  String getResponseFromHttpUrl(URL url) throws IOException {
+//        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+//        try {
+//            InputStream in = urlConnection.getInputStream();
+//
+//            Scanner scanner = new Scanner(in);
+//            scanner.useDelimiter("\\A");
+//
+//            boolean hasInput = scanner.hasNext();
+//            if (hasInput) {
+//            //    System.out.println(scanner.next());
+//                return scanner.next();
+//            } else {
+//                return null;
+//            }
+//        } finally {
+//            urlConnection.disconnect();
+//        }
+//    }
 }

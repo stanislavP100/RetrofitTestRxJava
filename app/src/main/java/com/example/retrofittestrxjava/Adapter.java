@@ -21,18 +21,15 @@ public class Adapter extends RecyclerView.Adapter<Adapter.NumberViewHolder>{
 
     private int mNumberItems;
 
-    private Response<List<Product>> products;
+    private List<Product> products;
 
 
-    public Adapter(Response<List<Product>> product) {
-        mNumberItems = product.body().size();
+    public Adapter(List<Product> product){
+        mNumberItems = product.size();
         this.products=product;
         //  bb=image;
     }
 
-    public Adapter( ArrayList<Product> products) {
-
-    }
 
     @NonNull
     @Override
@@ -79,9 +76,9 @@ public class Adapter extends RecyclerView.Adapter<Adapter.NumberViewHolder>{
         }
 
 
-        void setDetails(Response<List<Product>> products, int p) {
-            viewHolderIndex.setText(products.body().get(p).getName());
-            imageView.setImageBitmap(products.body().get(p).getImageBitmap());
+        void setDetails(List<Product>products, int p) {
+            viewHolderIndex.setText(products.get(p).getName());
+            imageView.setImageBitmap(products.get(p).getImageBitmap());
 
         }
 
