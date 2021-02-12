@@ -70,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
         Observable <List<Product>> productObservable=productApiRetrofit.getProductsObservable();
 
+        final int[] ii = {0};
 
         productObservable
                 .subscribeOn(Schedulers.io())
@@ -80,6 +81,53 @@ public class MainActivity extends AppCompatActivity {
                 mNumbersList.setLayoutManager(layoutManager);
                 mAdapter = new Adapter(s);
                 mNumbersList.setAdapter(mAdapter);
+                mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+                                                 @Override
+                                                 public void onChanged() {
+                                                     super.onChanged();
+                                                 }
+                                             }
+        );
+
+
+                            Observable <Bitmap> productObservableImage =Observable.create(img->{
+
+                        for(Product g : s)
+
+                            img.onNext(getBitmap("https://budmagas.herokuapp.com/get-image?image=" + g.getImage()));
+
+
+                    });
+
+                            productObservableImage.subscribeOn(Schedulers.io())
+                                    .observeOn(AndroidSchedulers.mainThread())
+                                    .subscribe(new Observer<Bitmap>() {
+                                           @Override
+                                           public void onSubscribe(@NonNull Disposable d) {
+
+                                           }
+
+                                           @Override
+                                           public void onNext(@NonNull Bitmap bitmap) {
+
+                                               s.get(ii[0]).setImageBitmap(bitmap);
+                                               mAdapter.notifyDataSetChanged();
+                                               ii[0]++;
+
+                                           }
+
+                                           @Override
+                                           public void onError(@NonNull Throwable e) {
+
+                                               e.printStackTrace();
+
+                                           }
+
+                                           @Override
+                                           public void onComplete() {
+                                           }
+                                  }
+                            );
 
                 },
                         (Throwable::printStackTrace));
